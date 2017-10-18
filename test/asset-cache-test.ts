@@ -1,7 +1,7 @@
 import test from 'ava';
 import * as http2 from 'http2';
 
-import {AssetCache, AssetCacheConfig} from '../src/asset-cache';
+import {AssetCache} from '../src/asset-cache';
 
 function delay(msec: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, msec));
@@ -21,7 +21,7 @@ function newAssetCache({
       {warmupDuration, promotionRatio, demotionRatio, minimumRequests});
 }
 
-test.beforeEach('create cache & session', t => {
+test.beforeEach('create session', t => {
   t.context.session = {};
 });
 
