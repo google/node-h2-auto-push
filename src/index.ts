@@ -29,19 +29,18 @@ export class AutoPush {
     return (req: Request, res: Response, next: express.NextFunction): void => {
       const reqPath = req.path;
       const stream = req.stream;
-      // TODO(jinwoo): Remove type casting once @types/node is fixed.
       stream.respondWithFile(path.join(root, reqPath), undefined, {
         getTrailers: (trailers) => {
           // Piggy-back on getTrailers() to record this path as a static
           // resource.
           this.assetCache.recordRequestPath(stream.session, reqPath, true);
         },
-        onError: (err: Error) => {
+        onError: (err) => {
           // Not a valid file. Record this path as a non-static resource.
           this.assetCache.recordRequestPath(stream.session, reqPath, false);
           next();
         },
-      } as http2.ServerStreamFileResponseOptions);
+      });
 
       // Auto-push related assets.
       for (const asset of this.assetCache.getAssetsForPath(reqPath)) {

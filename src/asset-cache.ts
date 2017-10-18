@@ -52,6 +52,7 @@ export class AssetCache {
     if (this.assetMap.has(path)) return;
 
     const sessionMapEntry = this.sessionMap.get(session);
+    this.sessionMap.delete(session);  // delete for future records
     if (sessionMapEntry === undefined) {
       console.warn('Session does not exist. Already deleted?');
       return;
