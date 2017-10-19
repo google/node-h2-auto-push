@@ -1,7 +1,19 @@
-import test from 'ava';
+import * as ava from 'ava';
 import * as http2 from 'http2';
 
 import {AssetCache} from '../src/asset-cache';
+
+function contextualize<T>(getContext: () => T): ava.RegisterContextual<T> {
+  ava.test.beforeEach(t => {
+    t.context = getContext();
+  });
+  return ava.test;
+}
+const test = contextualize(
+    () => ({
+      // just a dummy object because session is only used as a set key
+      session: {} as http2.Http2Session,
+    }));
 
 function delay(msec: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, msec));
@@ -21,13 +33,9 @@ function newAssetCache({
       {warmupDuration, promotionRatio, demotionRatio, minimumRequests});
 }
 
-test.beforeEach('create session', t => {
-  t.context.session = {};
-});
-
 test('request paths are recorded', async t => {
   const cache = newAssetCache({});
-  const session: http2.Http2Session = t.context.session;
+  const session = t.context.session;
 
   // Should record related paths for '/foo'.
   cache.recordRequestPath(session, '/foo', false);
@@ -53,7 +61,7 @@ test('request paths are recorded', async t => {
 
 test('minimum requests', async t => {
   const cache = newAssetCache({minimumRequests: 2});
-  const session: http2.Http2Session = t.context.session;
+  const session = t.context.session;
 
   const record = async () => {
     cache.recordRequestPath(session, '/foo', false);
@@ -70,7 +78,7 @@ test('minimum requests', async t => {
 
 test('promotion', async t => {
   const cache = newAssetCache({promotionRatio: 0.6, minimumRequests: 2});
-  const session: http2.Http2Session = t.context.session;
+  const session = t.context.session;
 
   const record1 = async () => {
     cache.recordRequestPath(session, '/foo', false);
@@ -97,7 +105,7 @@ test('promotion', async t => {
 test('demotion', async t => {
   const cache = newAssetCache(
       {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 2});
-  const session: http2.Http2Session = t.context.session;
+  const session = t.context.session;
 
   const record1 = async () => {
     cache.recordRequestPath(session, '/foo', false);

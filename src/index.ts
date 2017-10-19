@@ -42,10 +42,30 @@ export class AutoPush {
         },
       });
 
-      // Auto-push related assets.
+      if (!stream.pushAllowed) return;
+
+      ////// Auto-push related assets.
+
+      // Do not auto-push more than the TCP congestion window (cwnd) size.
+      // effectiveLocalWindowSize doesn't seem to reflect the actual network
+      // status. But at least it gives some reasonable value we can use.
+      // FIXME: The response size of the original request must also be
+      // considered but there's no easy way to know that. Ignore for now.
+      const windowSize = stream.session.state.effectiveLocalWindowSize;
+      let pushedSize = 0;
       for (const asset of this.assetCache.getAssetsForPath(reqPath)) {
+        if (windowSize && pushedSize > windowSize) break;
         stream.pushStream({':path': asset}, pushStream => {
-          pushStream.respondWithFile(path.join(root, asset));
+          pushStream.respondWithFile(path.join(root, asset), undefined, {
+            statCheck: (stats, headers, options) => {
+              if (windowSize && pushedSize + stats.size > windowSize) {
+                pushStream.rstWithCancel();
+                return false;
+              }
+              pushedSize += stats.size;
+              return true;
+            },
+          });
         });
       }
     };
