@@ -50,7 +50,7 @@ function connect(port: number): Connection {
 function request(connection: Connection, path: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const req = connection.session.request({':path': path});
-    req.on('data', () => {/* Nothing to do */})
+    req.on('data', () => {/* nothing to do */})
         .on('end', resolve)
         .on('error', reject);
   });

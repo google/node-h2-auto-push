@@ -65,6 +65,7 @@ export class AutoPush {
               pushedSize += stats.size;
               return true;
             },
+            onError: (err) => console.log(err),
           });
         });
       }

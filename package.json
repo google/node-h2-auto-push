@@ -24,7 +24,7 @@
   "devDependencies": {
     "@types/express": "^4.0.37",
     "@types/get-port": "^3.2.0",
-    "@types/node": "^8.0.45",
+    "@types/node": "^8.0.46",
     "ava": "^0.22.0",
     "get-port": "^3.2.0",
     "gts": "latest",
