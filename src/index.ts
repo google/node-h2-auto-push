@@ -3,14 +3,14 @@ import * as fs from 'fs';
 import * as http2 from 'http2';
 import * as path from 'path';
 
-import {AssetCache} from './asset-cache';
-import {AssetCacheConfig} from './asset-cache';
+import {AssetCache, AssetCacheConfig} from './asset-cache';
 
 export {AssetCacheConfig} from './asset-cache';
 
 type Request = express.Request&http2.Http2ServerRequest;
 type Response = express.Response&http2.Http2ServerResponse;
 
+// TODO(jinwoo): Tune these default parameters.
 const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
   warmupDuration: 500,
   promotionRatio: 0.8,
@@ -30,8 +30,8 @@ export class AutoPush {
       const reqPath = req.path;
       const stream = req.stream;
       stream.respondWithFile(path.join(root, reqPath), undefined, {
-        getTrailers: (trailers) => {
-          // Piggy-back on getTrailers() to record this path as a static
+        statCheck: () => {
+          // Piggy-back on statCheck() to record this path as a static
           // resource.
           this.assetCache.recordRequestPath(stream.session, reqPath, true);
         },
@@ -57,7 +57,7 @@ export class AutoPush {
         if (windowSize && pushedSize > windowSize) break;
         stream.pushStream({':path': asset}, pushStream => {
           pushStream.respondWithFile(path.join(root, asset), undefined, {
-            statCheck: (stats, headers, options) => {
+            statCheck: (stats) => {
               if (windowSize && pushedSize + stats.size > windowSize) {
                 pushStream.rstWithCancel();
                 return false;

@@ -1,27 +1,13 @@
-import * as ava from 'ava';
 import * as http2 from 'http2';
 
 import {AssetCache} from '../src/asset-cache';
+import {contextualize, delay, setEqual} from './utils';
 
-function contextualize<T>(getContext: () => T): ava.RegisterContextual<T> {
-  ava.test.beforeEach(t => {
-    t.context = getContext();
-  });
-  return ava.test;
-}
 const test = contextualize(
     () => ({
       // just a dummy object because session is only used as a set key
       session: {} as http2.Http2Session,
     }));
-
-function delay(msec: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, msec));
-}
-
-function setEqual<T>(set: Set<T>, ...values: T[]): boolean {
-  return set.size === values.length && values.every(v => set.has(v));
-}
 
 function newAssetCache({
   warmupDuration = 10,
