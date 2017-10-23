@@ -30,10 +30,23 @@ export class AutoPush {
       const reqPath = req.path;
       const stream = req.stream;
       stream.respondWithFile(path.join(root, reqPath), undefined, {
-        statCheck: () => {
+        statCheck: (stats, headers) => {
           // Piggy-back on statCheck() to record this path as a static
           // resource.
           this.assetCache.recordRequestPath(stream.session, reqPath, true);
+
+          const ifModifiedSinceHeader = req.headers['if-modified-since'];
+          const ifModifiedSince = typeof ifModifiedSinceHeader === 'string' ?
+              Date.parse(ifModifiedSinceHeader) :
+              null;
+          if (ifModifiedSince !== null &&
+              stats.mtime.getTime() <= ifModifiedSince) {
+            stream.respond({':status': 304});
+            return false;
+          }
+          headers['cache-control'] = 'public, max-age=0';
+          headers['last-modified'] = stats.mtime.toUTCString();
+          return true;
         },
         onError: (err) => {
           // Not a valid file. Record this path as a non-static resource.
