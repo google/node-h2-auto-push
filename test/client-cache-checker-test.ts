@@ -7,11 +7,11 @@ test('basic test', t => {
     ccc.addPath('' + i);
   }
   for (let i = 0; i < 100; i++) {
-    if (!ccc.test('' + i)) {
+    if (!ccc.mayHavePath('' + i)) {
       t.fail(`Failed for ${i}`);
     }
   }
-  t.false(ccc.test('100'));
+  t.false(ccc.mayHavePath('100'));
 });
 
 test('serialization', t => {
@@ -21,8 +21,8 @@ test('serialization', t => {
 
   // serialize & deserialize back
   const serialized = ccc.serialize();
-  const newCcc = ccc.deserialize(serialized);
-  t.true(ccc.test('foo'));
-  t.true(ccc.test('bar'));
-  t.false(ccc.test('baz'));
+  const newCcc = ClientCacheChecker.deserialize(serialized);
+  t.true(ccc.mayHavePath('foo'));
+  t.true(ccc.mayHavePath('bar'));
+  t.false(ccc.mayHavePath('baz'));
 });

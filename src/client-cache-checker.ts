@@ -1,38 +1,41 @@
 /// <reference path="./bloomfilter.d.ts"/>
 import {BloomFilter} from 'bloomfilter';
 
+const FALSE_POSITIVE_RATE = 0.01;
+const LOG2_1_ERROR = Math.log2(1 / FALSE_POSITIVE_RATE);
+const K = Math.round(LOG2_1_ERROR);
+
 export class ClientCacheChecker {
   private readonly bf: BloomFilter;
 
-  constructor(maxNumPaths: number|BloomFilter = 100, falsePositiveRate = 0.01) {
+  constructor(maxNumPaths: number|BloomFilter = 100) {
     if (typeof maxNumPaths === 'number') {
-      const log2p = Math.log2(1 / falsePositiveRate);
-      const m = Math.ceil(maxNumPaths * log2p / Math.log(2));
-      const k = Math.round(log2p);
-      this.bf = new BloomFilter(m, k);
+      this.bf = new BloomFilter(this.calculateM(maxNumPaths), K);
     } else {
       this.bf = maxNumPaths;
     }
+  }
+
+  private calculateM(maxNumPaths: number): number {
+    return Math.ceil(maxNumPaths * LOG2_1_ERROR / Math.log(2));
   }
 
   addPath(path: string): void {
     this.bf.add(path);
   }
 
-  test(path: string): boolean {
+  mayHavePath(path: string): boolean {
     return this.bf.test(path);
   }
 
   serialize(): string {
-    const buf = Buffer.from(this.bf.buckets.buffer);
-    return buf.toString('base64');
+    return Buffer.from(this.bf.buckets.buffer).toString('base64');
   }
 
-  deserialize(str: string): ClientCacheChecker {
+  static deserialize(str: string): ClientCacheChecker {
     const buf = Buffer.from(str, 'base64');
     const buckets = new Int32Array(
         buf.buffer, buf.byteOffset, buf.length / Int32Array.BYTES_PER_ELEMENT);
-    const bf = new BloomFilter(buckets, this.bf.k);
-    return new ClientCacheChecker(bf);
+    return new ClientCacheChecker(new BloomFilter(buckets, K));
   }
 }
