@@ -22,7 +22,7 @@ test('serialization', t => {
   // serialize & deserialize back
   const serialized = ccc.serialize();
   const newCcc = ClientCacheChecker.deserialize(serialized);
-  t.true(ccc.mayHavePath('foo'));
-  t.true(ccc.mayHavePath('bar'));
-  t.false(ccc.mayHavePath('baz'));
+  t.true(newCcc.mayHavePath('foo'));
+  t.true(newCcc.mayHavePath('bar'));
+  t.false(newCcc.mayHavePath('baz'));
 });
