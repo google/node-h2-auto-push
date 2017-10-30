@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as getPort from 'get-port';
 import * as http2 from 'http2';
+import * as path from 'path';
 
 import {AutoPush} from '../src/index';
 
@@ -19,7 +20,8 @@ test.beforeEach('start server', async t => {
     demotionRatio: 0.2,
     minimumRequests: 1,
   });
-  app.use(autoPush.static('test/assets'));
+  app.use(autoPush.static(
+      path.join(__dirname, '..', '..', 'ts', 'test', 'assets')));
   const context = await t.context;
   context.server = http2.createServer(app).listen(context.port);
 });
@@ -47,9 +49,9 @@ function connect(port: number): Connection {
   return {session, pushedPaths};
 }
 
-function request(connection: Connection, path: string): Promise<void> {
+function request(connection: Connection, reqPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const req = connection.session.request({':path': path});
+    const req = connection.session.request({':path': reqPath});
     req.on('data', () => {/* nothing to do */})
         .on('end', resolve)
         .on('error', reject);

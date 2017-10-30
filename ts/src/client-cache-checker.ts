@@ -29,7 +29,8 @@ export class ClientCacheChecker {
   }
 
   serialize(): string {
-    return Buffer.from(this.bf.buckets.buffer).toString('base64');
+    return Buffer.from(this.bf.buckets.buffer as ArrayBuffer)
+        .toString('base64');
   }
 
   static deserialize(str: string): ClientCacheChecker {
