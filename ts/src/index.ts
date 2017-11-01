@@ -12,8 +12,15 @@ import {ClientCacheChecker} from './client-cache-checker';
 
 export {AssetCacheConfig} from './asset-cache';
 
-type Request = express.Request&http2.Http2ServerRequest;
-type Response = express.Response&http2.Http2ServerResponse;
+type h2Request = express.Request&http2.Http2ServerRequest;
+type h2Response = express.Response&http2.Http2ServerResponse;
+
+type Request = express.Request|h2Request;
+type Response = express.Response|h2Response;
+
+function isH2Request(req: Request): req is h2Request {
+  return !!(req as h2Request).stream;
+}
 
 // TODO(jinwoo): Tune these default parameters.
 const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
@@ -76,6 +83,10 @@ export class AutoPush {
     return async(
                req: Request, res: Response,
                next: express.NextFunction): Promise<void> => {
+      if (!isH2Request(req)) {
+        throw new Error('auto-push middleware can only be used with http2');
+      }
+
       const cookies = cookie.parse(req.header('cookie') || '');
       const cacheKey = cookies[CACHE_COOKIE_KEY];
       const cacheChecker = cacheKey ? ClientCacheChecker.deserialize(cacheKey) :
