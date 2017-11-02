@@ -54,21 +54,23 @@ export class AutoPush {
   private async getAutoPushList(
       reqPath: string, stream: http2.ServerHttp2Stream,
       cacheChecker: ClientCacheChecker): Promise<string[]> {
-    // Do not auto-push more than the TCP congestion window (cwnd) size.
-    // effectiveLocalWindowSize doesn't seem to reflect the actual network
-    // status. But at least it gives some reasonable value we can use.
-    // FIXME: The response size of the original request must also be
-    // considered but there's no easy way to know that. Ignore for now.
-    const windowSize = stream.session.state.effectiveLocalWindowSize;
-    let pushedSize = 0;
     const result: string[] = [];
+    // Do not auto-push more than the window size. Use remoteWindowSize, which
+    // designates the remote window size for a connection, which means the
+    // amount of data we can send without window size update.
+    // FIXME: The response size of the original request must also be considered.
+    // Ignore for now.
+    const windowSize = stream.session.state.remoteWindowSize;
+    if (!windowSize) return result;
+
+    let pushedSize = 0;
     for (const asset of this.assetCache.getAssetsForPath(reqPath)) {
       if (cacheChecker.mayHavePath(asset)) {
         continue;
       }
-      if (windowSize && pushedSize > windowSize) break;
+      if (pushedSize > windowSize) break;
       const stats = await fsStat(path.join(this.getRootDir(), asset));
-      if (windowSize && pushedSize + stats.size > windowSize) {
+      if (pushedSize + stats.size > windowSize) {
         continue;
       }
       result.push(asset);
