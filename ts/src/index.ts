@@ -1,5 +1,3 @@
-import * as cookie from 'cookie';
-import * as express from 'express';
 import * as fs from 'fs';
 import * as http2 from 'http2';
 import * as path from 'path';
@@ -12,16 +10,6 @@ import {ClientCacheChecker} from './client-cache-checker';
 
 export {AssetCacheConfig} from './asset-cache';
 
-type H2Request = express.Request&http2.Http2ServerRequest;
-type H2Response = express.Response&http2.Http2ServerResponse;
-
-type Request = express.Request|H2Request;
-type Response = express.Response|H2Response;
-
-function isH2Request(req: Request): req is H2Request {
-  return !!(req as H2Request).stream;
-}
-
 // TODO(jinwoo): Tune these default parameters.
 const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
   warmupDuration: 500,
@@ -30,19 +18,14 @@ const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
   minimumRequests: 1,
 };
 
-const CACHE_COOKIE_KEY = '__ap_cache__';
-
 export class AutoPush {
   private readonly assetCache: AssetCache;
-  private rootDir: string|null = null;
+  private pushList: string[] = [];
 
-  constructor(cacheConfig: AssetCacheConfig = DEFAULT_CACHE_CONFIG) {
+  constructor(
+      private readonly rootDir: string,
+      cacheConfig: AssetCacheConfig = DEFAULT_CACHE_CONFIG) {
     this.assetCache = new AssetCache(cacheConfig);
-  }
-
-  private getRootDir(): string {
-    if (!this.rootDir) throw new Error('Root directory is not set');
-    return this.rootDir;
   }
 
   private addCacheHeaders(headers: http2.OutgoingHttpHeaders, stats: fs.Stats):
@@ -51,10 +34,33 @@ export class AutoPush {
     headers['last-modified'] = stats.mtime.toUTCString();
   }
 
+  recordRequestPath(
+      session: http2.Http2Session, reqPath: string, isStatic: boolean): void {
+    this.assetCache.recordRequestPath(session, reqPath, isStatic);
+  }
+
+  async preprocessRequest(
+      reqPath: string, stream: http2.ServerHttp2Stream,
+      cacheCookie?: string): Promise<string> {
+    const cacheChecker = cacheCookie ?
+        ClientCacheChecker.deserialize(cacheCookie) :
+        new ClientCacheChecker();
+    // Calculate the auto-push list before sending the response to be able to
+    // set the bloom filter cookie correctly that contains the auto-pushed
+    // assets as well as the original asset. Otherwise we'll auto-push assets
+    // that browser already has in future responses.
+    this.pushList = await this.getAutoPushList(reqPath, stream, cacheChecker);
+    cacheChecker.addPath(reqPath);
+    const cacheCookieValue = cacheChecker.serialize();
+    return cacheCookieValue;
+  }
+
   private async getAutoPushList(
       reqPath: string, stream: http2.ServerHttp2Stream,
       cacheChecker: ClientCacheChecker): Promise<string[]> {
     const result: string[] = [];
+    if (!stream.pushAllowed) return result;
+
     // Do not auto-push more than the window size. Use remoteWindowSize, which
     // designates the remote window size for a connection, which means the
     // amount of data we can send without window size update.
@@ -69,76 +75,35 @@ export class AutoPush {
         continue;
       }
       if (pushedSize > windowSize) break;
-      const stats = await fsStat(path.join(this.getRootDir(), asset));
-      if (pushedSize + stats.size > windowSize) {
-        continue;
+      try {
+        const stats = await fsStat(path.join(this.rootDir, asset));
+        if (pushedSize + stats.size > windowSize) {
+          continue;
+        }
+        result.push(asset);
+        cacheChecker.addPath(asset);
+        pushedSize += stats.size;
+      } catch (err) {
+        // fsStat() failed, just skip.
       }
-      result.push(asset);
-      cacheChecker.addPath(asset);
-      pushedSize += stats.size;
     }
     return result;
   }
 
-  static(root: string): express.RequestHandler {
-    this.rootDir = root;
-    return async(
-               req: Request, res: Response,
-               next: express.NextFunction): Promise<void> => {
-      if (!isH2Request(req)) {
-        throw new Error('auto-push middleware can only be used with http2');
-      }
-
-      const cookies = cookie.parse(req.header('cookie') || '');
-      const cacheKey = cookies[CACHE_COOKIE_KEY];
-      const cacheChecker = cacheKey ? ClientCacheChecker.deserialize(cacheKey) :
-                                      new ClientCacheChecker();
-      const reqPath = req.path;
-      const stream = req.stream;
-
-      // Calculate the auto-push list before sending the response to be able to
-      // set the bloom filter cookie correctly that contains the auto-pushed
-      // assets as well as the original asset. Otherwise we'll auto-push assets
-      // that browser already has in future responses.
-      const autoPushList = stream.pushAllowed ?
-          await this.getAutoPushList(reqPath, stream, cacheChecker) :
-          null;
-      cacheChecker.addPath(reqPath);
-      const cacheCookieValue = cacheChecker.serialize();
-      // TODO(jinwoo): Consider making this persistent across sessions.
-      res.cookie(CACHE_COOKIE_KEY, cacheCookieValue);
-
-      res.sendFile(path.join(root, reqPath), (err: NodeJS.ErrnoException) => {
-        if (err) {
-          if (err.code === 'ENOENT') {
-            this.assetCache.recordRequestPath(stream.session, reqPath, false);
-          }
-          next();
-          return;
-        }
-        this.assetCache.recordRequestPath(stream.session, reqPath, true);
-      });
-
-      if (autoPushList) {
-        this.autoPush(autoPushList, stream);
-      }
-    };
-  }
-
-  private autoPush(autoPushList: string[], stream: http2.ServerHttp2Stream) {
-    for (const asset of autoPushList) {
+  push(stream: http2.ServerHttp2Stream) {
+    for (const asset of this.pushList) {
       stream.pushStream({':path': asset}, pushStream => {
-        pushStream.respondWithFile(
-            path.join(this.getRootDir(), asset), undefined, {
-              statCheck: (stats, headers) => {
-                this.addCacheHeaders(headers, stats);
-              },
-              onError: (err) => {
-                console.log(err);
-                pushStream.end();
-              },
-            });
+        pushStream.respondWithFile(path.join(this.rootDir, asset), undefined, {
+          statCheck: (stats, headers) => {
+            this.addCacheHeaders(headers, stats);
+          },
+          onError: (err) => {
+            console.log(err);
+            pushStream.end();
+          },
+        });
       });
     }
+    this.pushList = [];
   }
 }
