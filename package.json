@@ -1,8 +1,8 @@
 {
   "name": "auto-push",
   "version": "0.1.0",
-  "description": "Google's HTTP/2 auto-push middleware",
-  "main": "./build/src/index.js",
+  "description": "Google's HTTP/2 auto-push middleware for express",
+  "main": "build/src/index.js",
   "scripts": {
     "test": "ava build/test/*-test.js",
     "check": "gts check",
@@ -17,7 +17,7 @@
     "http2",
     "auto-push"
   ],
-  "author": "Google Inc.",
+  "author": "Google LLC",
   "license": "Apache-2.0",
   "readme": "ERROR: No README data found!",
   "_id": "auto-push@0.1.0",

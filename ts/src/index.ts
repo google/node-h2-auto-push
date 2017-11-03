@@ -12,14 +12,14 @@ import {ClientCacheChecker} from './client-cache-checker';
 
 export {AssetCacheConfig} from './asset-cache';
 
-type h2Request = express.Request&http2.Http2ServerRequest;
-type h2Response = express.Response&http2.Http2ServerResponse;
+type H2Request = express.Request&http2.Http2ServerRequest;
+type H2Response = express.Response&http2.Http2ServerResponse;
 
-type Request = express.Request|h2Request;
-type Response = express.Response|h2Response;
+type Request = express.Request|H2Request;
+type Response = express.Response|H2Response;
 
-function isH2Request(req: Request): req is h2Request {
-  return !!(req as h2Request).stream;
+function isH2Request(req: Request): req is H2Request {
+  return !!(req as H2Request).stream;
 }
 
 // TODO(jinwoo): Tune these default parameters.
