@@ -33,13 +33,15 @@ export class AssetCache {
       session: http2.Http2Session, path: string, isStatic: boolean): void {
     if (this.assetMap.has(path)) return;
 
-    const entry = this.sessionMap.get(session);
-    if (!entry) {
-      this.sessionMap.set(session, new Set());
-      setTimeout(() => this.onWarm(path, session), this.config.warmupDuration);
-    } else if (isStatic) {
-      // Only static resources are auto-pushed.
-      entry.add(path);
+    if (session) {
+      const entry = this.sessionMap.get(session);
+      if (!entry) {
+        this.sessionMap.set(session, new Set());
+        setTimeout(() => this.onWarm(path, session), this.config.warmupDuration);
+      } else if (isStatic) {
+        // Only static resources are auto-pushed.
+        entry.add(path);
+      }
     }
   }
 
