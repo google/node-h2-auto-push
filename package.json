@@ -1,5 +1,5 @@
 {
-  "name": "auto-push",
+  "name": "h2-auto-push",
   "version": "0.1.0",
   "description": "Google's HTTP/2 auto-push middleware for express",
   "main": "build/src/index.js",
@@ -15,17 +15,18 @@
   },
   "keywords": [
     "http2",
-    "auto-push"
+    "auto-push",
+    "server-push"
   ],
   "author": "Google LLC",
   "license": "Apache-2.0",
   "readme": "ERROR: No README data found!",
-  "_id": "auto-push@0.1.0",
+  "_id": "h2-auto-push@0.1.0",
   "devDependencies": {
     "@types/express": "^4.0.39",
-    "@types/node": "^8.0.47",
-    "ava": "^0.22.0",
-    "gts": "^0.4.1",
+    "@types/node": "^8.0.50",
+    "ava": "^0.23.0",
+    "gts": "^0.5.0",
     "typescript": "^2.6.1"
   },
   "dependencies": {

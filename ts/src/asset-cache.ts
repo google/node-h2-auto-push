@@ -37,7 +37,8 @@ export class AssetCache {
       const entry = this.sessionMap.get(session);
       if (!entry) {
         this.sessionMap.set(session, new Set());
-        setTimeout(() => this.onWarm(path, session), this.config.warmupDuration);
+        setTimeout(
+            () => this.onWarm(path, session), this.config.warmupDuration);
       } else if (isStatic) {
         // Only static resources are auto-pushed.
         entry.add(path);

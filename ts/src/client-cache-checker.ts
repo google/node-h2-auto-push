@@ -1,4 +1,3 @@
-/// <reference path="./bloomfilter.d.ts"/>
 import {BloomFilter} from 'bloomfilter';
 
 const FALSE_POSITIVE_RATE = 0.01;
