@@ -90,20 +90,28 @@ export class AutoPush {
     return result;
   }
 
-  push(stream: http2.ServerHttp2Stream) {
-    for (const asset of this.pushList) {
-      stream.pushStream({':path': asset}, pushStream => {
-        pushStream.respondWithFile(path.join(this.rootDir, asset), undefined, {
-          statCheck: (stats, headers) => {
-            this.addCacheHeaders(headers, stats);
-          },
-          onError: (err) => {
-            console.log(err);
-            pushStream.end();
-          },
+  async push(stream: http2.ServerHttp2Stream): Promise<void> {
+    const pushPromises = this.pushList.map((asset): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        stream.pushStream({':path': asset}, pushStream => {
+          pushStream.on('finish', () => {
+            resolve();
+          });
+          pushStream.respondWithFile(
+              path.join(this.rootDir, asset), undefined, {
+                statCheck: (stats, headers) => {
+                  this.addCacheHeaders(headers, stats);
+                },
+                onError: (err) => {
+                  console.error(err);
+                  pushStream.end();
+                  reject(err);
+                },
+              });
         });
       });
-    }
+    });
     this.pushList = [];
+    await Promise.all(pushPromises);
   }
 }
