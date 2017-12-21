@@ -1,8 +1,9 @@
 {
   "name": "h2-auto-push",
   "version": "0.1.0",
-  "description": "Google's HTTP/2 auto-push middleware for express",
+  "description": "HTTP/2 auto-push library",
   "main": "build/src/index.js",
+  "types": "build/src/index",
   "scripts": {
     "test": "ava build/test/*-test.js",
     "check": "gts check",
@@ -20,17 +21,14 @@
   ],
   "author": "Google LLC",
   "license": "Apache-2.0",
-  "readme": "ERROR: No README data found!",
-  "_id": "h2-auto-push@0.1.0",
-  "devDependencies": {
-    "@types/express": "^4.0.39",
-    "@types/node": "^8.0.50",
-    "ava": "^0.23.0",
-    "gts": "^0.5.1",
-    "typescript": "^2.6.1"
-  },
+  "repository": "github:google/h2-auto-push",
   "dependencies": {
-    "bloomfilter": "0.0.16",
-    "express": "github:phouri/express#initial-support-http2"
+    "bloomfilter": "0.0.16"
+  },
+  "devDependencies": {
+    "@types/node": "^8.5.2",
+    "ava": "^0.24.0",
+    "gts": "^0.5.2",
+    "typescript": "~2.6.2"
   }
 }
