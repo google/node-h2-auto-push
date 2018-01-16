@@ -4,15 +4,23 @@
   "description": "HTTP/2 auto-push library",
   "main": "build/src/index.js",
   "types": "build/src/index",
+  "files": [
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "README.md",
+    "build/src"
+  ],
   "scripts": {
-    "test": "ava build/test/*-test.js",
+    "test": "nyc ava",
+    "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
     "check": "gts check",
     "clean": "gts clean",
     "compile": "tsc -p .",
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run check"
+    "posttest": "npm run check && npm run license-check",
+    "license-check": "jsgl --local ."
   },
   "keywords": [
     "http2",
@@ -21,14 +29,27 @@
   ],
   "author": "Google LLC",
   "license": "Apache-2.0",
-  "repository": "github:google/h2-auto-push",
+  "repository": "github:google/node-h2-auto-push",
+  "ava": {
+    "files": [
+      "build/test/*-test.js"
+    ]
+  },
+  "nyc": {
+    "exclude": [
+      "build/test"
+    ]
+  },
   "dependencies": {
     "bloomfilter": "0.0.16"
   },
   "devDependencies": {
-    "@types/node": "^8.5.2",
+    "@types/node": "^9.3.0",
     "ava": "^0.24.0",
-    "gts": "^0.5.2",
+    "codecov": "^3.0.0",
+    "gts": "^0.5.3",
+    "js-green-licenses": "^0.3.1",
+    "nyc": "^11.4.1",
     "typescript": "~2.6.2"
   }
 }
