@@ -1,4 +1,5 @@
 import test from 'ava';
+import * as getPort from 'get-port';
 import * as http2 from 'http2';
 import * as path from 'path';
 
@@ -8,7 +9,9 @@ function staticFilePath(filePath: string): string {
   return path.join(__dirname, '..', '..', 'ts', 'test', 'static', filePath);
 }
 
-function startServer() {
+async function startServer(): Promise<number> {
+  const port = await getPort();
+
   const ap = new AutoPush(staticFilePath(''));
   const server = http2.createServer();
   server
@@ -23,7 +26,6 @@ function startServer() {
       .on('stream', async (stream, headers) => {
         const reqPath = headers[':path'] as string;
         await ap.preprocessRequest(reqPath, stream);
-        await ap.push(stream);
         switch (reqPath) {
           case '/foo.html':
             stream.respondWithFile(staticFilePath('foo.html'));
@@ -35,8 +37,10 @@ function startServer() {
             throw new Error(`Unexpected path: ${reqPath}`);
         }
         ap.recordRequestPath(stream.session, reqPath, true);
+        await ap.push(stream);
       });
-  server.listen(8443);
+  server.listen(port);
+  return port;
 }
 
 interface ClientData {
@@ -88,11 +92,11 @@ function delay(ms: number): Promise<void> {
 }
 
 test('basic test', async (t) => {
-  startServer();
+  const port = await startServer();
 
   // Request /foo.html and /bar.html so that /bar.html is pushed when /foo.html
   // is requested in a following session.
-  const client1 = http2.connect('http://localhost:8443');
+  const client1 = http2.connect(`http://localhost:${port}`);
   const fooData = await request(client1, '/foo.html');
   t.true(fooData.data.includes('This is a foo document.'));
   t.is(fooData.pushedPaths.length, 0);
@@ -104,7 +108,7 @@ test('basic test', async (t) => {
   await delay(1000);
 
   // Request /foo.html and see /bar.html is pushed.
-  const client2 = http2.connect('http://localhost:8443');
+  const client2 = http2.connect(`http://localhost:${port}`);
   const fooData2 = await request(client2, '/foo.html');
   t.true(fooData2.data.includes('This is a foo document.'));
   t.deepEqual(fooData2.pushedPaths, ['/bar.html']);
