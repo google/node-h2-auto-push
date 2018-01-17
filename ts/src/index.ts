@@ -127,17 +127,18 @@ export class AutoPush {
               });
         };
         // Node 9.4.0 changed the callback function signature.
-        const callback: PushStreamCallback = isNode940 ?
-            ((err: Error, pushStream: http2.ServerHttp2Stream):
-                 void => {
-                   if (err) {
-                     return reject(err);
-                   }
-                   pushFile(pushStream);
-                 }) as Function as PushStreamCallback :
-            (pushStream) => {
-              pushFile(pushStream);
-            };
+        let callback: PushStreamCallback;
+        if (isNode940) {
+          callback =
+              ((err: Error, pushStream: http2.ServerHttp2Stream): void => {
+                if (err) {
+                  return reject(err);
+                }
+                pushFile(pushStream);
+              }) as Function as PushStreamCallback;
+        } else {
+          callback = pushFile;
+        }
 
         stream.pushStream({':path': asset}, callback);
       });
