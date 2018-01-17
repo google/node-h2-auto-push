@@ -15,6 +15,7 @@
 import * as fs from 'fs';
 import * as http2 from 'http2';
 import * as path from 'path';
+import * as semver from 'semver';
 import {promisify} from 'util';
 
 const fsStat = promisify(fs.stat);
@@ -23,6 +24,9 @@ import {AssetCache, AssetCacheConfig} from './asset-cache';
 import {ClientCacheChecker} from './client-cache-checker';
 
 export {AssetCacheConfig} from './asset-cache';
+
+const isNode940 = semver.satisfies(process.version, '>=9.4.0');
+type PushStreamCallback = (pushStream: http2.ServerHttp2Stream) => void;
 
 // TODO(jinwoo): Tune these default parameters.
 const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
@@ -107,7 +111,7 @@ export class AutoPush {
   async push(stream: http2.ServerHttp2Stream): Promise<void> {
     const pushPromises = this.pushList.map((asset): Promise<void> => {
       return new Promise((resolve, reject) => {
-        stream.pushStream({':path': asset}, pushStream => {
+        const pushFile = (pushStream: http2.ServerHttp2Stream): void => {
           pushStream.on('finish', () => {
             resolve();
           });
@@ -117,12 +121,25 @@ export class AutoPush {
                   this.addCacheHeaders(headers, stats);
                 },
                 onError: (err) => {
-                  console.error(err);
                   pushStream.end();
                   reject(err);
                 },
               });
-        });
+        };
+        // Node 9.4.0 changed the callback function signature.
+        const callback: PushStreamCallback = isNode940 ?
+            ((err: Error, pushStream: http2.ServerHttp2Stream):
+                 void => {
+                   if (err) {
+                     return reject(err);
+                   }
+                   pushFile(pushStream);
+                 }) as Function as PushStreamCallback :
+            (pushStream) => {
+              pushFile(pushStream);
+            };
+
+        stream.pushStream({':path': asset}, callback);
       });
     });
     this.pushList = [];

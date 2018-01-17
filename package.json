@@ -41,10 +41,12 @@
     ]
   },
   "dependencies": {
-    "bloomfilter": "^0.0.16"
+    "bloomfilter": "^0.0.16",
+    "semver": "^5.5.0"
   },
   "devDependencies": {
     "@types/node": "^9.3.0",
+    "@types/semver": "^5.4.0",
     "ava": "^0.24.0",
     "codecov": "^3.0.0",
     "gts": "^0.5.3",
