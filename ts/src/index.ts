@@ -15,7 +15,6 @@
 import * as fs from 'fs';
 import * as http2 from 'http2';
 import * as path from 'path';
-import * as semver from 'semver';
 import {promisify} from 'util';
 
 const fsStat = promisify(fs.stat);
@@ -25,7 +24,6 @@ import {ClientCacheChecker} from './client-cache-checker';
 
 export {AssetCacheConfig} from './asset-cache';
 
-const isNode940 = semver.satisfies(process.version, '>=9.4.0');
 type PushStreamCallback = (pushStream: http2.ServerHttp2Stream) => void;
 
 // TODO(jinwoo): Tune these default parameters.
@@ -126,21 +124,15 @@ export class AutoPush {
                 },
               });
         };
-        // Node 9.4.0 changed the callback function signature.
-        let callback: PushStreamCallback;
-        if (isNode940) {
-          callback =
-              ((err: Error, pushStream: http2.ServerHttp2Stream): void => {
-                if (err) {
-                  return reject(err);
-                }
-                pushFile(pushStream);
-              }) as Function as PushStreamCallback;
-        } else {
-          callback = pushFile;
-        }
-
-        stream.pushStream({':path': asset}, callback);
+        stream.pushStream(
+            {':path': asset},
+            // Node 9.4.0 changed the callback function signature, hence casting
+            ((err: Error, pushStream: http2.ServerHttp2Stream): void => {
+              if (err) {
+                return reject(err);
+              }
+              pushFile(pushStream);
+            }) as Function as PushStreamCallback);
       });
     });
     this.pushList = [];

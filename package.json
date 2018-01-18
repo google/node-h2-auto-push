@@ -22,6 +22,9 @@
     "posttest": "npm run check && npm run license-check",
     "license-check": "jsgl --local ."
   },
+  "engines": {
+    "node": ">=9.4.0 || >8.9.4 <9"
+  },
   "keywords": [
     "http2",
     "auto-push",
@@ -41,8 +44,7 @@
     ]
   },
   "dependencies": {
-    "bloomfilter": "^0.0.16",
-    "semver": "^5.5.0"
+    "bloomfilter": "^0.0.16"
   },
   "devDependencies": {
     "@types/get-port": "^3.2.0",
