@@ -24,6 +24,8 @@ import {ClientCacheChecker} from './client-cache-checker';
 
 export {AssetCacheConfig} from './asset-cache';
 
+type PushStreamCallback = (pushStream: http2.ServerHttp2Stream) => void;
+
 // TODO(jinwoo): Tune these default parameters.
 const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
   warmupDuration: 500,
@@ -107,7 +109,7 @@ export class AutoPush {
   async push(stream: http2.ServerHttp2Stream): Promise<void> {
     const pushPromises = this.pushList.map((asset): Promise<void> => {
       return new Promise((resolve, reject) => {
-        stream.pushStream({':path': asset}, pushStream => {
+        const pushFile = (pushStream: http2.ServerHttp2Stream): void => {
           pushStream.on('finish', () => {
             resolve();
           });
@@ -117,12 +119,20 @@ export class AutoPush {
                   this.addCacheHeaders(headers, stats);
                 },
                 onError: (err) => {
-                  console.error(err);
                   pushStream.end();
                   reject(err);
                 },
               });
-        });
+        };
+        stream.pushStream(
+            {':path': asset},
+            // Node 9.4.0 changed the callback function signature, hence casting
+            ((err: Error, pushStream: http2.ServerHttp2Stream): void => {
+              if (err) {
+                return reject(err);
+              }
+              pushFile(pushStream);
+            }) as Function as PushStreamCallback);
       });
     });
     this.pushList = [];
