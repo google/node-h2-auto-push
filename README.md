@@ -27,6 +27,8 @@ This library assumes that the middlewares built on top of it act as a static
 file server. That is because static file serving is one of the most common
 use cases for HTTP/2 server push.
 
+**This package currently works only with Node >=9.4.0.**
+
 ## Interface
 
 ### `class AutoPush`
