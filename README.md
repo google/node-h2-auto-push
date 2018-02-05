@@ -27,6 +27,9 @@ This library assumes that the middlewares built on top of it act as a static
 file server. That is because static file serving is one of the most common
 use cases for HTTP/2 server push.
 
+See https://github.com/google/node-fastify-auto-push for an example. It is a
+fastify plugin for supporting auto-push.
+
 **This package currently works only with Node >=9.4.0.**
 
 ## Interface
@@ -50,7 +53,12 @@ Constructs an `AutoPush` object.
 preprocessRequest(
     reqPath: string,
     stream: http2.ServerHttp2Stream,
-    cacheCookie?: string): Promise<string>;
+    cacheCookie?: string): Promise<PreprocessResult>;
+
+interface PreprocessResult {
+  newCacheCookie: string;
+  pushFn: (stream: http2.ServerHttp2Stream) => Promise<void>;
+}
 ```
 
 This method must be called for every request from the client. It determines
@@ -65,8 +73,13 @@ information in a cookie value.
     which resources are cached in the browser. It is up to the middleware
     which cookie to use for this.
 
-Returns a promise for the updated cookie value. The middleware must use this
-value to store it in the browser cookie.
+Returns a promise for the result (`PreprocessResult`). The middleware must
+use the `newCacheCookie` value to store it in the browser cookie, and use
+`pushFn` to push static resources that are associated with the current
+request.
+
+*   `stream`: The stream associated with the current request/response. This
+    method will create a new push stream for pushed resources, if any.
 
 This method (and `recordRequestPath()` described below) must be called for
 non-static file requests as well as static files that are being served by the
@@ -94,18 +107,6 @@ called for non-static file requests as well as static files, as explained for
 *   `reqPath`: The request path given from the client.
 *   `isStatic`: `true` if the request is for a static file that is being served
     by the middleware, `false` otherwise.
-
-#### `push()`
-
-```typescript
-push(stream: http2.ServerHttp2Stream): Promise<void>;
-```
-
-This method pushes the static resources that are associated with the current
-request.
-
-*   `stream`: The stream associated with the current request/response. This
-    method will create a new push stream for pushed resources, if any.
 
 ### `AssetCacheConfig`
 

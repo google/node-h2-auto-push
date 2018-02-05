@@ -25,7 +25,7 @@ async function startServer(): Promise<number> {
           })
       .on('stream', async (stream, headers) => {
         const reqPath = headers[':path'] as string;
-        await ap.preprocessRequest(reqPath, stream);
+        const {pushFn} = await ap.preprocessRequest(reqPath, stream);
         switch (reqPath) {
           case '/foo.html':
             stream.respondWithFile(staticFilePath('foo.html'));
@@ -37,7 +37,7 @@ async function startServer(): Promise<number> {
             throw new Error(`Unexpected path: ${reqPath}`);
         }
         ap.recordRequestPath(stream.session, reqPath, true);
-        await ap.push(stream);
+        await pushFn(stream);
       });
   server.listen(port);
   return port;
