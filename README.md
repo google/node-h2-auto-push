@@ -28,7 +28,7 @@ file server. That is because static file serving is one of the most common
 use cases for HTTP/2 server push.
 
 See https://github.com/google/node-fastify-auto-push for an example. It is a
-fastify plugin for supporting auto-push.
+[fastify](https://www.fastify.io/) plugin for supporting auto-push.
 
 **This package currently works only with Node >=9.4.0.**
 

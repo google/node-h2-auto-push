@@ -74,7 +74,7 @@ export class AutoPush {
     const newCacheCookie = cacheChecker.serialize();
     return {
       newCacheCookie,
-      pushFn: async (stream) => await this.push(stream, pushList),
+      pushFn: (stream) => this.push(stream, pushList),
     };
   }
 
