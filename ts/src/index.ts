@@ -34,9 +34,13 @@ const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
   minimumRequests: 1,
 };
 
+export interface PreprocessResult {
+  newCacheCookie: string;
+  pushFn: (stream: http2.ServerHttp2Stream) => Promise<void>;
+}
+
 export class AutoPush {
   private readonly assetCache: AssetCache;
-  private pushList: string[] = [];
 
   constructor(
       private readonly rootDir: string,
@@ -57,7 +61,7 @@ export class AutoPush {
 
   async preprocessRequest(
       reqPath: string, stream: http2.ServerHttp2Stream,
-      cacheCookie?: string): Promise<string> {
+      cacheCookie?: string): Promise<PreprocessResult> {
     const cacheChecker = cacheCookie ?
         ClientCacheChecker.deserialize(cacheCookie) :
         new ClientCacheChecker();
@@ -65,10 +69,13 @@ export class AutoPush {
     // set the bloom filter cookie correctly that contains the auto-pushed
     // assets as well as the original asset. Otherwise we'll auto-push assets
     // that browser already has in future responses.
-    this.pushList = await this.getAutoPushList(reqPath, stream, cacheChecker);
+    const pushList = await this.getAutoPushList(reqPath, stream, cacheChecker);
     cacheChecker.addPath(reqPath);
-    const cacheCookieValue = cacheChecker.serialize();
-    return cacheCookieValue;
+    const newCacheCookie = cacheChecker.serialize();
+    return {
+      newCacheCookie,
+      pushFn: (stream) => this.push(stream, pushList),
+    };
   }
 
   private async getAutoPushList(
@@ -106,8 +113,9 @@ export class AutoPush {
     return result;
   }
 
-  async push(stream: http2.ServerHttp2Stream): Promise<void> {
-    const pushPromises = this.pushList.map((asset): Promise<void> => {
+  private async push(stream: http2.ServerHttp2Stream, pushList: string[]):
+      Promise<void> {
+    const pushPromises = pushList.map((asset): Promise<void> => {
       return new Promise((resolve, reject) => {
         const pushFile = (pushStream: http2.ServerHttp2Stream): void => {
           pushStream.on('finish', () => {
@@ -135,7 +143,6 @@ export class AutoPush {
             }) as Function as PushStreamCallback);
       });
     });
-    this.pushList = [];
     await Promise.all(pushPromises);
   }
 }
