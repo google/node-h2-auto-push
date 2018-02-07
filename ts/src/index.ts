@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as fs from 'fs';
-import * as http2 from 'http2';
-import * as path from 'path';
+import fs from 'fs';
+import http2 from 'http2';
+import path from 'path';
 import {promisify} from 'util';
 
 const fsStat = promisify(fs.stat);
