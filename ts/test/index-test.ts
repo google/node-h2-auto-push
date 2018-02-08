@@ -1,7 +1,7 @@
 import test from 'ava';
-import * as getPort from 'get-port';
-import * as http2 from 'http2';
-import * as path from 'path';
+import getPort from 'get-port';
+import http2 from 'http2';
+import path from 'path';
 
 import {AutoPush} from '../src/index';
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as http2 from 'http2';
+import http2 from 'http2';
 
 const EMPTY_ASSETS: ReadonlyArray<string> = Object.freeze([]);
 

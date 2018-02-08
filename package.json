@@ -48,14 +48,14 @@
   },
   "devDependencies": {
     "@types/get-port": "^3.2.0",
-    "@types/node": "^9.3.0",
-    "@types/semver": "^5.4.0",
-    "ava": "^0.24.0",
+    "@types/node": "^9.4.1",
+    "@types/semver": "^5.5.0",
+    "ava": "^0.25.0",
     "codecov": "^3.0.0",
     "get-port": "^3.2.0",
     "gts": "^0.5.3",
     "js-green-licenses": "^0.4.0",
     "nyc": "^11.4.1",
-    "typescript": "~2.6.2"
+    "typescript": "~2.7.1"
   }
 }
