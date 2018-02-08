@@ -1,5 +1,7 @@
 # HTTP/2 automatic server push
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/google/node-h2-auto-push.svg)](https://greenkeeper.io/)
+
 **This is not an official Google product.**
 
 [HTTP/2](https://tools.ietf.org/html/rfc7540) is a major revision of the HTTP
