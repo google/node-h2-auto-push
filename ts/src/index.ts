@@ -118,9 +118,19 @@ export class AutoPush {
     const pushPromises = pushList.map((asset): Promise<void> => {
       return new Promise((resolve, reject) => {
         const pushFile = (pushStream: http2.ServerHttp2Stream): void => {
-          pushStream.on('finish', () => {
+          const onFinish = () => {
+            pushStream.removeListener('error', onError);
             resolve();
-          });
+          };
+          const onError = (err: Error) => {
+            console.error('push stream error for:', asset, err);
+            pushStream.removeListener('finish', onFinish);
+            pushStream.end();
+            reject(err);
+          };
+          pushStream.once('error', onError);
+          pushStream.once('finish', onFinish);
+
           pushStream.respondWithFile(
               path.join(this.rootDir, asset), undefined, {
                 statCheck: (stats, headers) => {

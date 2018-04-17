@@ -101,7 +101,6 @@ test('promotion', async t => {
   t.true(setEqual(cache.getAssetsForPath('/foo'), '/bar'));
 });
 
-
 test('demotion', async t => {
   const cache = newAssetCache(
       {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 2});
@@ -126,4 +125,27 @@ test('demotion', async t => {
   // success ratio (1.0) > promotion ratio (0.6) => promoted
   await record2();
   t.true(setEqual(cache.getAssetsForPath('/foo'), '/baz'));
+});
+
+test('do not use a candiate as a push key', async t => {
+  const cache = newAssetCache(
+      {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 1});
+  const session = t.context.session;
+
+  const record1 = async () => {
+    cache.recordRequestPath(session, '/foo', true);
+    cache.recordRequestPath(session, '/bar', true);
+    await delay(20);
+  };
+  const record2 = async () => {
+    cache.recordRequestPath(session, '/bar', true);
+    cache.recordRequestPath(session, '/baz', true);
+    await delay(20);
+  };
+  // doesn't meet minimum requests yet
+  await record1();
+  await record2();
+  t.true(setEqual(cache.getAssetsForPath('/foo'), '/bar'));
+  // /bar is a push candidate for /foo. Shouldn't be a push key.
+  t.is(cache.getAssetsForPath('/bar').size, 0);
 });
