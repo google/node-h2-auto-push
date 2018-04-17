@@ -40,6 +40,7 @@ export class AssetCache {
       new WeakMap();
   private readonly warmingMetrics: Map<string, WarmingMetricsEntry> = new Map();
   private readonly assetMap: Map<string, RelatedPaths> = new Map();
+  private readonly pushCandidates: Set<string> = new Set();
 
   constructor(private readonly config: AssetCacheConfig) {}
 
@@ -66,7 +67,9 @@ export class AssetCache {
   }
 
   private onWarm(path: string, session: http2.Http2Session): void {
-    if (this.assetMap.has(path)) return;
+    // Don't use a path as a push key when it is also one of push candidates. It
+    // can cause a chain effect, causing unnecessary pushes.
+    if (this.assetMap.has(path) || this.pushCandidates.has(path)) return;
 
     const sessionMapEntry = this.sessionMap.get(session);
     this.sessionMap.delete(session);  // delete for future records
@@ -89,6 +92,9 @@ export class AssetCache {
     const ratio = warmingMetricsEntry.successes / warmingMetricsEntry.total;
     if (ratio >= this.config.promotionRatio) {
       this.assetMap.set(path, warmingMetricsEntry.paths);
+      for (const p of warmingMetricsEntry.paths) {
+        this.pushCandidates.add(p);
+      }
       this.warmingMetrics.delete(path);
     } else if (ratio <= this.config.demotionRatio) {
       // Try again with the current set of paths, this may be brittle
