@@ -59,7 +59,7 @@ preprocessRequest(
 
 interface PreprocessResult {
   newCacheCookie: string;
-  pushFn: (stream: http2.ServerHttp2Stream) => Promise<void>;
+  pushFn: () => Promise<void>;
 }
 ```
 
@@ -80,9 +80,6 @@ use the `newCacheCookie` value to store it in the browser cookie, and use
 `pushFn` to push static resources that are associated with the current
 request.
 
-*   `stream`: The stream associated with the current request/response. This
-    method will create a new push stream for pushed resources, if any.
-
 This method (and `recordRequestPath()` described below) must be called for
 non-static file requests as well as static files that are being served by the
 middleware. That's because there may be cases where a set of static files
@@ -91,6 +88,10 @@ must be pushed in association with a non-static resource. For example, when
 application, it probably wants to push related resources such as stylesheets,
 images, JavaScript files, etc. that are needed for the browser to render the
 page.
+
+When there is an error while pushing resources, a `'pushError'` will be
+emitted on the parent `stream`, whose argument is an error object that caused
+it.
 
 #### `recordRequestPath()`
 

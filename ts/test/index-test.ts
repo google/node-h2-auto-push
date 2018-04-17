@@ -37,7 +37,7 @@ async function startServer(): Promise<number> {
             throw new Error(`Unexpected path: ${reqPath}`);
         }
         ap.recordRequestPath(stream.session, reqPath, true);
-        await pushFn(stream);
+        await pushFn();
       });
   server.listen(port);
   return port;

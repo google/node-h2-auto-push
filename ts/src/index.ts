@@ -36,7 +36,7 @@ const DEFAULT_CACHE_CONFIG: AssetCacheConfig = {
 
 export interface PreprocessResult {
   newCacheCookie: string;
-  pushFn: (stream: http2.ServerHttp2Stream) => Promise<void>;
+  pushFn: () => Promise<void>;
 }
 
 export class AutoPush {
@@ -74,7 +74,7 @@ export class AutoPush {
     const newCacheCookie = cacheChecker.serialize();
     return {
       newCacheCookie,
-      pushFn: (stream) => this.push(stream, pushList),
+      pushFn: () => this.push(stream, pushList),
     };
   }
 
@@ -123,7 +123,8 @@ export class AutoPush {
             resolve();
           };
           const onError = (err: Error) => {
-            console.error('push stream error for:', asset, err);
+            stream.emit('pushError', err);
+
             pushStream.removeListener('finish', onFinish);
             pushStream.end();
             reject(err);
@@ -136,10 +137,7 @@ export class AutoPush {
                 statCheck: (stats, headers) => {
                   this.addCacheHeaders(headers, stats);
                 },
-                onError: (err) => {
-                  pushStream.end();
-                  reject(err);
-                },
+                onError,
               });
         };
         stream.pushStream(
