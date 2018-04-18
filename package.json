@@ -1,6 +1,6 @@
 {
   "name": "h2-auto-push",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "HTTP/2 auto-push library",
   "main": "build/src/index.js",
   "types": "build/src/index",
