@@ -138,8 +138,8 @@ export class AutoPush {
                   this.addCacheHeaders(headers, stats);
                 },
                 onError: (err) => {
-                  onError(err);
                   pushStream.removeListener('error', onError);
+                  onError(err);
                 },
               });
         };
