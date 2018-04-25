@@ -143,7 +143,7 @@ export class AutoPush {
                 },
               });
         };
-        stream.pushStream({':path': asset}, (err, pushStream): void => {
+        stream.pushStream({':path': asset}, (err, pushStream) => {
           if (err) {
             return reject(err);
           }
