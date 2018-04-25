@@ -143,15 +143,12 @@ export class AutoPush {
                 },
               });
         };
-        stream.pushStream(
-            {':path': asset},
-            // Node 9.4.0 changed the callback function signature, hence casting
-            ((err: Error, pushStream: http2.ServerHttp2Stream): void => {
-              if (err) {
-                return reject(err);
-              }
-              pushFile(pushStream);
-            }) as Function as PushStreamCallback);
+        stream.pushStream({':path': asset}, (err, pushStream): void => {
+          if (err) {
+            return reject(err);
+          }
+          pushFile(pushStream);
+        });
       });
     });
     await Promise.all(pushPromises);
