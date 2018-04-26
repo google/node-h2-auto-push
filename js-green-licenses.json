@@ -1,5 +1,0 @@
-{
-  "packageWhitelist": [
-    "bloomfilter"  // Has LICENSE (BSD-3-Clause) but not listed in package.json
-  ]
-}
