@@ -47,7 +47,7 @@
     "bloomfilter": "^0.0.18"
   },
   "devDependencies": {
-    "@types/get-port": "^3.2.0",
+    "@types/get-port": "^4.0.0",
     "@types/node": "^10.0.1",
     "@types/semver": "^5.5.0",
     "ava": "^0.25.0",
