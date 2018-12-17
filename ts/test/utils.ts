@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as ava from 'ava';
+import test from 'ava';
 
-export function contextualize<T>(getContext: () => T):
-    ava.RegisterContextual<T> {
-  ava.test.beforeEach(t => {
+export function contextualize<T>(getContext: () => T) {
+  test.beforeEach(t => {
     t.context = getContext();
   });
-  return ava.test;
+  return test;
 }
 
 export function delay(msec: number): Promise<void> {

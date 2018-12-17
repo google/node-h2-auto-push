@@ -17,7 +17,11 @@ import http2 from 'http2';
 import {AssetCache} from '../src/asset-cache';
 import {contextualize, delay, setEqual} from './utils';
 
-const test = contextualize(
+interface WithSession {
+  session: http2.Http2Session
+};
+
+const test = contextualize<WithSession>(
     () => ({
       // just a dummy object because session is only used as a set key
       session: {} as http2.Http2Session,
@@ -35,7 +39,7 @@ function newAssetCache({
 
 test('request paths are recorded', async t => {
   const cache = newAssetCache({});
-  const session = t.context.session;
+  const session = (t.context as WithSession).session;
 
   // Should record related paths for '/foo'.
   cache.recordRequestPath(session, '/foo', false);
@@ -61,7 +65,7 @@ test('request paths are recorded', async t => {
 
 test('minimum requests', async t => {
   const cache = newAssetCache({minimumRequests: 2});
-  const session = t.context.session;
+  const session = (t.context as WithSession).session;
 
   const record = async () => {
     cache.recordRequestPath(session, '/foo', false);
@@ -78,7 +82,7 @@ test('minimum requests', async t => {
 
 test('promotion', async t => {
   const cache = newAssetCache({promotionRatio: 0.6, minimumRequests: 2});
-  const session = t.context.session;
+  const session = (t.context as WithSession).session;
 
   const record1 = async () => {
     cache.recordRequestPath(session, '/foo', false);
@@ -104,7 +108,7 @@ test('promotion', async t => {
 test('demotion', async t => {
   const cache = newAssetCache(
       {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 2});
-  const session = t.context.session;
+  const session = (t.context as WithSession).session;
 
   const record1 = async () => {
     cache.recordRequestPath(session, '/foo', false);
@@ -130,7 +134,7 @@ test('demotion', async t => {
 test('do not use a candiate as a push key', async t => {
   const cache = newAssetCache(
       {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 1});
-  const session = t.context.session;
+  const session = (t.context as WithSession).session;
 
   const record1 = async () => {
     cache.recordRequestPath(session, '/foo', true);
