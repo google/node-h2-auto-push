@@ -18,8 +18,8 @@ import {AssetCache} from '../src/asset-cache';
 import {contextualize, delay, setEqual} from './utils';
 
 interface WithSession {
-  session: http2.Http2Session
-};
+  session: http2.Http2Session;
+}
 
 const test = contextualize<WithSession>(
     () => ({
