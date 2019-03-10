@@ -33,6 +33,12 @@ async function startServer(): Promise<number> {
           case '/bar.html':
             stream.respondWithFile(staticFilePath('bar.html'));
             break;
+          case '/bar.js':
+            stream.respondWithFile(staticFilePath('bar.js'));
+            break;
+          case '/bar.png':
+            stream.respondWithFile(staticFilePath('bar.png'));
+            break;
           default:
             throw new Error(`Unexpected path: ${reqPath}`);
         }
@@ -43,9 +49,14 @@ async function startServer(): Promise<number> {
   return port;
 }
 
+interface FileData {
+  path: string;
+  contentType: string;
+}
+
 interface ClientData {
   data: string;
-  pushedPaths: string[];
+  pushedPaths: FileData[];
 }
 
 function request(
@@ -65,7 +76,9 @@ function request(
               throw err;
             })
         .on('stream', (pushedStream, headers) => {
-          result.pushedPaths.push(headers[':path'] as string);
+          const path = headers[':path'] as string;
+          const contentType = headers['content-type'] as string;
+          result.pushedPaths.push({path, contentType});
         });
     const clientStream = session.request({':path': reqPath});
     clientStream.setEncoding('utf8');
@@ -91,7 +104,7 @@ function delay(ms: number): Promise<void> {
   });
 }
 
-test('basic test', async (t) => {
+test('should push html file', async (t) => {
   const port = await startServer();
 
   // Request /foo.html and /bar.html so that /bar.html is pushed when /foo.html
@@ -111,5 +124,38 @@ test('basic test', async (t) => {
   const client2 = http2.connect(`http://localhost:${port}`);
   const fooData2 = await request(client2, '/foo.html');
   t.true(fooData2.data.includes('This is a foo document.'));
-  t.deepEqual(fooData2.pushedPaths, ['/bar.html']);
+  t.deepEqual(
+      fooData2.pushedPaths, [{path: '/bar.html', contentType: 'text/html'}]);
+});
+
+test('should send content-type', async (t) => {
+  const port = await startServer();
+
+  // Request foo.html
+  const client1 = http2.connect(`http://localhost:${port}`);
+  const fooData = await request(client1, '/foo.html');
+  t.true(fooData.data.includes('This is a foo document.'));
+  t.is(fooData.pushedPaths.length, 0);
+
+  // Request a javascript file
+  const barJs = await request(client1, '/bar.js');
+  t.true(barJs.data.includes('module.exports = "test bar";'));
+
+  // Request an image file
+  const barPng = await request(client1, '/bar.png');
+
+  t.is(barJs.pushedPaths.length, 0);
+  t.is(barPng.pushedPaths.length, 0);
+
+  // Delay so that the next request is not part of the warming up.
+  await delay(1000);
+
+  // Request /foo.html and see if /bar.js and /bar.png are pushed.
+  const client2 = http2.connect(`http://localhost:${port}`);
+  const fooData2 = await request(client2, '/foo.html');
+  t.is(fooData2.pushedPaths.length, 2);
+  t.deepEqual(fooData2.pushedPaths, [
+    {path: '/bar.js', contentType: 'application/javascript'},
+    {path: '/bar.png', contentType: 'image/png'}
+  ]);
 });

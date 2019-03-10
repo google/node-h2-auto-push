@@ -14,6 +14,7 @@
 
 import fs from 'fs';
 import http2 from 'http2';
+import {lookup} from 'mime-types';
 import path from 'path';
 import {promisify} from 'util';
 
@@ -48,8 +49,10 @@ export class AutoPush {
     this.assetCache = new AssetCache(cacheConfig);
   }
 
-  private addCacheHeaders(headers: http2.OutgoingHttpHeaders, stats: fs.Stats):
-      void {
+  private addCacheHeaders(
+      headers: http2.OutgoingHttpHeaders, stats: fs.Stats,
+      filePath: string): void {
+    headers['content-type'] = lookup(filePath) as string;
     headers['cache-control'] = 'public, max-age=0';
     headers['last-modified'] = stats.mtime.toUTCString();
   }
@@ -118,6 +121,7 @@ export class AutoPush {
     const pushPromises = pushList.map((asset): Promise<void> => {
       return new Promise((resolve, reject) => {
         const pushFile = (pushStream: http2.ServerHttp2Stream): void => {
+          const filePath = path.join(this.rootDir, asset);
           const onFinish = () => {
             pushStream.removeListener('error', onError);
             resolve();
@@ -132,23 +136,24 @@ export class AutoPush {
           pushStream.once('error', onError);
           pushStream.once('finish', onFinish);
 
-          pushStream.respondWithFile(
-              path.join(this.rootDir, asset), undefined, {
-                statCheck: (stats, headers) => {
-                  this.addCacheHeaders(headers, stats);
-                },
-                onError: (err) => {
-                  pushStream.removeListener('error', onError);
-                  onError(err);
-                },
-              });
+          pushStream.respondWithFile(filePath, undefined, {
+            statCheck: (stats, headers) => {
+              this.addCacheHeaders(headers, stats, filePath);
+            },
+            onError: (err) => {
+              pushStream.removeListener('error', onError);
+              onError(err);
+            },
+          });
         };
-        stream.pushStream({':path': asset}, (err, pushStream) => {
-          if (err) {
-            return reject(err);
-          }
-          pushFile(pushStream);
-        });
+        stream.pushStream(
+            {':path': asset, 'content-type': lookup(asset) as string},
+            (err, pushStream) => {
+              if (err) {
+                return reject(err);
+              }
+              pushFile(pushStream);
+            });
       });
     });
     await Promise.all(pushPromises);
