@@ -43,6 +43,9 @@
       "build/test"
     ]
   },
+  "publishConfig": {
+    "registry": "https://wombat-dressing-room.appspot.com"
+  },
   "dependencies": {
     "bloomfilter": "^0.0.18",
     "mime-types": "^2.1.22"
