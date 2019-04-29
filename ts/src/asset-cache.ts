@@ -36,8 +36,10 @@ function setEqual<T>(a: Set<T>, b: Set<T>): boolean {
 }
 
 export class AssetCache {
-  private readonly sessionMap: WeakMap<http2.Http2Session, RelatedPaths> =
-      new WeakMap();
+  private readonly sessionMap: WeakMap<
+    http2.Http2Session,
+    RelatedPaths
+  > = new WeakMap();
   private readonly warmingMetrics: Map<string, WarmingMetricsEntry> = new Map();
   private readonly assetMap: Map<string, RelatedPaths> = new Map();
   private readonly pushCandidates: Set<string> = new Set();
@@ -45,7 +47,10 @@ export class AssetCache {
   constructor(private readonly config: AssetCacheConfig) {}
 
   recordRequestPath(
-      session: http2.Http2Session, path: string, isStatic: boolean): void {
+    session: http2.Http2Session,
+    path: string,
+    isStatic: boolean
+  ): void {
     if (this.assetMap.has(path)) return;
 
     if (session) {
@@ -53,7 +58,9 @@ export class AssetCache {
       if (!entry) {
         this.sessionMap.set(session, new Set());
         setTimeout(
-            () => this.onWarm(path, session), this.config.warmupDuration);
+          () => this.onWarm(path, session),
+          this.config.warmupDuration
+        );
       } else if (isStatic) {
         // Only static resources are auto-pushed.
         entry.add(path);
@@ -72,7 +79,7 @@ export class AssetCache {
     if (this.assetMap.has(path) || this.pushCandidates.has(path)) return;
 
     const sessionMapEntry = this.sessionMap.get(session);
-    this.sessionMap.delete(session);  // delete for future records
+    this.sessionMap.delete(session); // delete for future records
     if (sessionMapEntry === undefined) {
       console.warn('Session does not exist. Already deleted?');
       return;
@@ -80,7 +87,7 @@ export class AssetCache {
 
     let warmingMetricsEntry = this.warmingMetrics.get(path);
     if (warmingMetricsEntry === undefined) {
-      warmingMetricsEntry = {successes: 0, total: 0, paths: sessionMapEntry};
+      warmingMetricsEntry = { successes: 0, total: 0, paths: sessionMapEntry };
       this.warmingMetrics.set(path, warmingMetricsEntry);
     }
     if (setEqual(sessionMapEntry, warmingMetricsEntry.paths)) {
@@ -98,8 +105,11 @@ export class AssetCache {
       this.warmingMetrics.delete(path);
     } else if (ratio <= this.config.demotionRatio) {
       // Try again with the current set of paths, this may be brittle
-      this.warmingMetrics.set(
-          path, {successes: 1, total: 1, paths: sessionMapEntry});
+      this.warmingMetrics.set(path, {
+        successes: 1,
+        total: 1,
+        paths: sessionMapEntry,
+      });
     }
   }
 }

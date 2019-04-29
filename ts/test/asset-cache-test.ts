@@ -14,27 +14,30 @@
 
 import http2 from 'http2';
 
-import {AssetCache} from '../src/asset-cache';
-import {contextualize, delay, setEqual} from './utils';
+import { AssetCache } from '../src/asset-cache';
+import { contextualize, delay, setEqual } from './utils';
 
 interface WithSession {
   session: http2.Http2Session;
 }
 
-const test = contextualize<WithSession>(
-    () => ({
-      // just a dummy object because session is only used as a set key
-      session: {} as http2.Http2Session,
-    }));
+const test = contextualize<WithSession>(() => ({
+  // just a dummy object because session is only used as a set key
+  session: {} as http2.Http2Session,
+}));
 
 function newAssetCache({
   warmupDuration = 10,
   promotionRatio = 0.8,
   demotionRatio = 0.2,
-  minimumRequests = 1
+  minimumRequests = 1,
 }): AssetCache {
-  return new AssetCache(
-      {warmupDuration, promotionRatio, demotionRatio, minimumRequests});
+  return new AssetCache({
+    warmupDuration,
+    promotionRatio,
+    demotionRatio,
+    minimumRequests,
+  });
 }
 
 test('request paths are recorded', async t => {
@@ -44,7 +47,7 @@ test('request paths are recorded', async t => {
   // Should record related paths for '/foo'.
   cache.recordRequestPath(session, '/foo', false);
   cache.recordRequestPath(session, '/bar', true);
-  cache.recordRequestPath(session, '/baz', false);  // non-static
+  cache.recordRequestPath(session, '/baz', false); // non-static
   cache.recordRequestPath(session, '/bah', true);
   await delay(20);
   // '/baz' is not included because it's non-static.
@@ -64,7 +67,7 @@ test('request paths are recorded', async t => {
 });
 
 test('minimum requests', async t => {
-  const cache = newAssetCache({minimumRequests: 2});
+  const cache = newAssetCache({ minimumRequests: 2 });
   const session = (t.context as WithSession).session;
 
   const record = async () => {
@@ -81,7 +84,7 @@ test('minimum requests', async t => {
 });
 
 test('promotion', async t => {
-  const cache = newAssetCache({promotionRatio: 0.6, minimumRequests: 2});
+  const cache = newAssetCache({ promotionRatio: 0.6, minimumRequests: 2 });
   const session = (t.context as WithSession).session;
 
   const record1 = async () => {
@@ -106,8 +109,11 @@ test('promotion', async t => {
 });
 
 test('demotion', async t => {
-  const cache = newAssetCache(
-      {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 2});
+  const cache = newAssetCache({
+    promotionRatio: 0.6,
+    demotionRatio: 0.5,
+    minimumRequests: 2,
+  });
   const session = (t.context as WithSession).session;
 
   const record1 = async () => {
@@ -132,8 +138,11 @@ test('demotion', async t => {
 });
 
 test('do not use a candiate as a push key', async t => {
-  const cache = newAssetCache(
-      {promotionRatio: 0.6, demotionRatio: 0.5, minimumRequests: 1});
+  const cache = newAssetCache({
+    promotionRatio: 0.6,
+    demotionRatio: 0.5,
+    minimumRequests: 1,
+  });
   const session = (t.context as WithSession).session;
 
   const record1 = async () => {
