@@ -60,7 +60,7 @@
     "get-port": "^5.0.0",
     "gts": "^1.0.0",
     "js-green-licenses": "^1.0.0",
-    "nyc": "^14.0.0",
+    "nyc": "^15.0.0",
     "typescript": "~3.8.0"
   }
 }
