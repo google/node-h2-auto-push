@@ -54,7 +54,7 @@
     "@types/get-port": "^4.0.0",
     "@types/mime-types": "^2.1.0",
     "@types/node": "^10.0.1",
-    "@types/semver": "^6.0.0",
+    "@types/semver": "^7.0.0",
     "ava": "^2.0.0",
     "codecov": "^3.0.1",
     "get-port": "^5.0.0",
