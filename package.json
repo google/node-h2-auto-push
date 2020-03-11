@@ -5,25 +5,21 @@
   "main": "build/src/index.js",
   "types": "build/src/index",
   "files": [
-    "CONTRIBUTING.md",
-    "LICENSE",
-    "README.md",
     "build/src"
   ],
   "scripts": {
     "test": "nyc ava",
     "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
-    "check": "gts check",
+    "lint": "gts check",
     "clean": "gts clean",
     "compile": "tsc -p .",
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run check && npm run license-check",
     "license-check": "jsgl --local ."
   },
   "engines": {
-    "node": ">=9.4.0 || >8.9.4 <9"
+    "node": ">=10"
   },
   "keywords": [
     "http2",
