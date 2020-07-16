@@ -9,7 +9,6 @@
   ],
   "scripts": {
     "test": "nyc ava",
-    "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
     "lint": "gts check",
     "clean": "gts clean",
     "compile": "tsc -p .",
@@ -52,11 +51,10 @@
     "@types/node": "^10.0.1",
     "@types/semver": "^7.0.0",
     "ava": "^2.0.0",
-    "codecov": "^3.0.1",
     "get-port": "^5.0.0",
     "gts": "^1.0.0",
     "js-green-licenses": "^2.0.0",
     "nyc": "^15.0.0",
-    "typescript": "~3.8.0"
+    "typescript": "~3.9.4"
   }
 }
