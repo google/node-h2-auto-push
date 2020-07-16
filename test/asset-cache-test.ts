@@ -14,8 +14,8 @@
 
 import http2 from 'http2';
 
-import { AssetCache } from '../src/asset-cache';
-import { contextualize, delay, setEqual } from './utils';
+import {AssetCache} from '../src/asset-cache';
+import {contextualize, delay, setEqual} from './utils';
 
 interface WithSession {
   session: http2.Http2Session;
@@ -67,7 +67,7 @@ test('request paths are recorded', async t => {
 });
 
 test('minimum requests', async t => {
-  const cache = newAssetCache({ minimumRequests: 2 });
+  const cache = newAssetCache({minimumRequests: 2});
   const session = (t.context as WithSession).session;
 
   const record = async () => {
@@ -84,7 +84,7 @@ test('minimum requests', async t => {
 });
 
 test('promotion', async t => {
-  const cache = newAssetCache({ promotionRatio: 0.6, minimumRequests: 2 });
+  const cache = newAssetCache({promotionRatio: 0.6, minimumRequests: 2});
   const session = (t.context as WithSession).session;
 
   const record1 = async () => {

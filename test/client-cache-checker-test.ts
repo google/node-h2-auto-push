@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import test from 'ava';
-import { ClientCacheChecker } from '../src/client-cache-checker';
+import {ClientCacheChecker} from '../src/client-cache-checker';
 
 test('basic test', t => {
   const ccc = new ClientCacheChecker();

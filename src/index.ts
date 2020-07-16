@@ -14,16 +14,16 @@
 
 import fs from 'fs';
 import http2 from 'http2';
-import { lookup } from 'mime-types';
+import {lookup} from 'mime-types';
 import path from 'path';
-import { promisify } from 'util';
+import {promisify} from 'util';
 
 const fsStat = promisify(fs.stat);
 
-import { AssetCache, AssetCacheConfig } from './asset-cache';
-import { ClientCacheChecker } from './client-cache-checker';
+import {AssetCache, AssetCacheConfig} from './asset-cache';
+import {ClientCacheChecker} from './client-cache-checker';
 
-export { AssetCacheConfig } from './asset-cache';
+export {AssetCacheConfig} from './asset-cache';
 
 type PushStreamCallback = (pushStream: http2.ServerHttp2Stream) => void;
 
@@ -160,7 +160,7 @@ export class AutoPush {
             });
           };
           stream.pushStream(
-            { ':path': asset, 'content-type': lookup(asset) as string },
+            {':path': asset, 'content-type': lookup(asset) as string},
             (err, pushStream) => {
               if (err) {
                 return reject(err);

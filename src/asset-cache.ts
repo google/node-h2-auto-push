@@ -87,7 +87,7 @@ export class AssetCache {
 
     let warmingMetricsEntry = this.warmingMetrics.get(path);
     if (warmingMetricsEntry === undefined) {
-      warmingMetricsEntry = { successes: 0, total: 0, paths: sessionMapEntry };
+      warmingMetricsEntry = {successes: 0, total: 0, paths: sessionMapEntry};
       this.warmingMetrics.set(path, warmingMetricsEntry);
     }
     if (setEqual(sessionMapEntry, warmingMetricsEntry.paths)) {

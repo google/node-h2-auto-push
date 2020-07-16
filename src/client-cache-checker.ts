@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { BloomFilter } from 'bloomfilter';
+import {BloomFilter} from 'bloomfilter';
 
 const FALSE_POSITIVE_RATE = 0.01;
 const LOG2_1_ERROR = Math.log2(1 / FALSE_POSITIVE_RATE);

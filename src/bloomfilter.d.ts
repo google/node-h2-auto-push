@@ -1,4 +1,4 @@
-// Copyright 2017 Google LLC.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ declare module 'bloomfilter' {
     constructor(m: number, k: number);
     constructor(buf: ArrayLike<number>, k: number);
     buckets: Int32Array;
-    add(value: any): void;
-    test(value: any): boolean;
+    add(value: unknown): void;
+    test(value: unknown): boolean;
     m: number;
     k: number;
   }

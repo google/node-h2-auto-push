@@ -18,7 +18,7 @@
     "license-check": "jsgl --local ."
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=10.10.0"
   },
   "keywords": [
     "http2",
@@ -52,7 +52,7 @@
     "@types/semver": "^7.0.0",
     "ava": "^2.0.0",
     "get-port": "^5.0.0",
-    "gts": "^1.0.0",
+    "gts": "^2.0.0",
     "js-green-licenses": "^2.0.0",
     "nyc": "^15.0.0",
     "typescript": "~3.9.4"
