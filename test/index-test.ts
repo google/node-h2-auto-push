@@ -1,12 +1,26 @@
+// Copyright 2017 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import test from 'ava';
 import getPort from 'get-port';
 import http2 from 'http2';
 import path from 'path';
 
-import { AutoPush } from '../src/index';
+import {AutoPush} from '../src/index';
 
 function staticFilePath(filePath: string): string {
-  return path.join(__dirname, '..', '..', 'ts', 'test', 'static', filePath);
+  return path.join(__dirname, '..', '..', 'test', 'static', filePath);
 }
 
 async function startServer(): Promise<number> {
@@ -23,7 +37,7 @@ async function startServer(): Promise<number> {
     })
     .on('stream', async (stream, headers) => {
       const reqPath = headers[':path'] as string;
-      const { pushFn } = await ap.preprocessRequest(reqPath, stream);
+      const {pushFn} = await ap.preprocessRequest(reqPath, stream);
       switch (reqPath) {
         case '/foo.html':
           stream.respondWithFile(staticFilePath('foo.html'));
@@ -76,9 +90,9 @@ function request(
       .on('stream', (pushedStream, headers) => {
         const path = headers[':path'] as string;
         const contentType = headers['content-type'] as string;
-        result.pushedPaths.push({ path, contentType });
+        result.pushedPaths.push({path, contentType});
       });
-    const clientStream = session.request({ ':path': reqPath });
+    const clientStream = session.request({':path': reqPath});
     clientStream.setEncoding('utf8');
     let data = '';
     clientStream
@@ -122,7 +136,7 @@ test('should push html file', async t => {
   const fooData2 = await request(client2, '/foo.html');
   t.true(fooData2.data.includes('This is a foo document.'));
   t.deepEqual(fooData2.pushedPaths, [
-    { path: '/bar.html', contentType: 'text/html' },
+    {path: '/bar.html', contentType: 'text/html'},
   ]);
 });
 
@@ -137,7 +151,7 @@ test('should send content-type', async t => {
 
   // Request a javascript file
   const barJs = await request(client1, '/bar.js');
-  t.true(barJs.data.includes('module.exports = "test bar";'));
+  t.true(barJs.data.includes("module.exports = 'test bar';"));
 
   // Request an image file
   const barPng = await request(client1, '/bar.png');
@@ -153,7 +167,7 @@ test('should send content-type', async t => {
   const fooData2 = await request(client2, '/foo.html');
   t.is(fooData2.pushedPaths.length, 2);
   t.deepEqual(fooData2.pushedPaths, [
-    { path: '/bar.js', contentType: 'application/javascript' },
-    { path: '/bar.png', contentType: 'image/png' },
+    {path: '/bar.js', contentType: 'application/javascript'},
+    {path: '/bar.png', contentType: 'image/png'},
   ]);
 });
